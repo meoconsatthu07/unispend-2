@@ -43,7 +43,7 @@ def export_excel_bytes(
     thin_side = Side(border_style="thin", color="E4ECE6")
     cell_border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
 
-    ws_summary["A1"] = f"BÁO CÁO TÀI CHÍNH UNISPEND — KỲ {month}"
+    ws_summary["A1"] = f"BÁO CÁO TÀI CHÍNH THU CHI UTH — KỲ {month}"
     ws_summary["A1"].font = title_font
     ws_summary["A2"] = f"Ngày xuất báo cáo: {datetime.now().strftime('%d/%m/%Y %H:%M')}"
     ws_summary["A2"].font = normal_font
@@ -202,7 +202,7 @@ def export_pdf_bytes(
 
     pdf.set_font(font_name, size=16)
     pdf.set_text_color(33, 76, 60)
-    pdf.cell(0, 10, _txt(f"BÁO CÁO TÀI CHÍNH UNISPEND — KỲ {month}"), new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 10, _txt(f"BÁO CÁO TÀI CHÍNH THU CHI UTH — KỲ {month}"), new_x="LMARGIN", new_y="NEXT")
 
     pdf.set_font(font_name, size=10)
     pdf.set_text_color(80, 100, 90)

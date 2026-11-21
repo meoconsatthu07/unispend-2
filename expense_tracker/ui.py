@@ -259,8 +259,8 @@ def _sync_query_params(store: ExpenseStore, ext_store: ExtensionsStore) -> str:
         except Exception:
             pass
 
-    # 5. Xử lý Tab đang mở (?tab=lich|hoadon|thongke|canhan|ocr|voice|cleaner)
-    valid_tabs = {"lich", "hoadon", "thongke", "canhan", "ocr", "voice", "cleaner"}
+    # 5. Xử lý Tab đang mở (?tab=lich|hoadon|thongke|canhan|ocr|voice|cleaner|dbview)
+    valid_tabs = {"lich", "hoadon", "thongke", "canhan", "ocr", "voice", "cleaner", "dbview"}
     q_tab = str(qp.get("tab") or "").strip().lower()
     if q_tab in valid_tabs:
         st.session_state["active_mobile_tab"] = q_tab
@@ -272,6 +272,7 @@ def _sync_query_params(store: ExpenseStore, ext_store: ExtensionsStore) -> str:
             "ocr": "ocr",
             "voice": "voice",
             "cleaner": "cleaner",
+            "dbview": "dbview",
         }
         st.session_state["active_studio_panel"] = studio_map[q_tab]
 
@@ -287,6 +288,7 @@ def _sync_query_params(store: ExpenseStore, ext_store: ExtensionsStore) -> str:
         "ocr": "ocr",
         "voice": "voice",
         "cleaner": "cleaner",
+        "dbview": "dbview",
         "assistant": "canhan",
         "backup": "canhan",
         "bills": "hoadon",
@@ -458,7 +460,7 @@ def _render_account_manager(
                     placeholder="VD: Dữ liệu thật Kaggle, Nhóm 3 UTH...",
                     max_chars=80,
                 )
-                imp_file = st.file_uploader("Chọn tệp SQLite (.db) của UniSpend 2.0", type=["db"], key="import_acc_db_file")
+                imp_file = st.file_uploader("Chọn tệp SQLite (.db) của THU CHI UTH", type=["db"], key="import_acc_db_file")
                 if st.form_submit_button("Thêm làm tài khoản riêng", type="primary", width="stretch"):
                     if imp_file is None:
                         st.error("Vui lòng chọn tệp .db trước khi tải lên.")
@@ -642,6 +644,119 @@ def _render_ai_data_cleaner_studio(
                 )
 
 
+def _render_sqlite_database_viewer(
+    db_path: str | Path,
+    store: ExpenseStore,
+    ext_store: ExtensionsStore,
+) -> None:
+    """Trình xem trực tiếp các bảng SQLite (.db) của tài khoản đang mở ngay trên giao diện Web."""
+    active_p = Path(db_path).resolve()
+    ext_p = Path(str(ext_store.db_path)).resolve() if str(ext_store.db_path) != ":memory:" else None
+
+    with st.container(border=True):
+        _html_md(
+            f'<div class="section-heading" style="margin-top:0;">'
+            f'{lucide_svg("file-spreadsheet", 17, "#34D399")}'
+            f'<span>Trình Xem Cơ Sở Dữ Liệu SQLite (.db) Trực Tiếp Trên Web</span></div>'
+        )
+        st.caption(
+            f"📂 **File DB chính:** `{active_p}`  \n"
+            + (f"📂 **File DB mở rộng (Hóa đơn OCR / AI):** `{ext_p}`" if ext_p else "")
+        )
+
+        db_choice = st.radio(
+            "Chọn tệp cơ sở dữ liệu muốn xem",
+            [
+                f"1️⃣ DB Chính ({active_p.name} — Giao dịch & Ngân sách)",
+                f"2️⃣ DB Mở rộng ({ext_p.name if ext_p else 'extensions.db'} — 51 Hóa đơn OCR, AI, Cài đặt)",
+            ],
+            horizontal=True,
+            key="web_db_file_choice",
+        )
+        conn = store.connection if db_choice.startswith("1️⃣") else ext_store.connection
+
+        raw_tables = [
+            r[0]
+            for r in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            ).fetchall()
+        ]
+        priority = {"transactions": 0, "budgets": 1, "receipts": 0, "ai_history": 1, "ui_settings": 2}
+        tables = sorted(raw_tables, key=lambda t: (priority.get(t, 9), t))
+        if not tables:
+            st.info("Chưa có bảng dữ liệu nào.")
+            return
+
+        table_counts = {
+            t: int(conn.execute(f'SELECT COUNT(*) FROM "{t}"').fetchone()[0])
+            for t in tables
+        }
+        c_sel, c_lim = st.columns([2, 1])
+        with c_sel:
+            picked_table = st.selectbox(
+                "Chọn bảng (Table) để xem dữ liệu",
+                options=tables,
+                format_func=lambda t: f"📋 Bảng {t} ({table_counts.get(t, 0)} dòng)",
+                key="web_db_table_picker",
+            )
+        with c_lim:
+            max_rows = st.selectbox(
+                "Số dòng hiển thị tối đa",
+                options=[50, 200, 500, 2500],
+                index=1,
+                key="web_db_row_limit",
+            )
+
+        # Lấy danh sách cột (bỏ cột image_blob nhị phân để bảng hiển thị mượt)
+        col_info = conn.execute(f'PRAGMA table_info("{picked_table}")').fetchall()
+        col_names = [c[1] for c in col_info if c[1] != "image_blob"]
+        col_expr = ", ".join(f'"{c}"' for c in col_names) if col_names else "*"
+
+        order_clause = " ORDER BY id DESC" if "id" in col_names else ""
+        rows = conn.execute(
+            f'SELECT {col_expr} FROM "{picked_table}"{order_clause} LIMIT ?',
+            (int(max_rows),),
+        ).fetchall()
+        records = [dict(zip(col_names, r)) for r in rows]
+
+        st.markdown(f"**Bảng `{picked_table}`** — Đang hiển thị **{len(records)} / {table_counts[picked_table]}** bản ghi:")
+        st.dataframe(records, width="stretch", hide_index=True)
+
+        with st.expander("🔍 Xem cấu trúc bảng (Schema & Ràng buộc CHECK SQLite)"):
+            ddl_row = conn.execute(
+                "SELECT sql FROM sqlite_master WHERE type='table' AND name=?",
+                (picked_table,),
+            ).fetchone()
+            if ddl_row and ddl_row[0]:
+                st.code(ddl_row[0], language="sql")
+            schema_rows = [
+                {"Thứ tự": c[0], "Tên cột": c[1], "Kiểu dữ liệu": c[2], "NOT NULL": bool(c[3]), "Mặc định": c[4], "Khóa chính (PK)": bool(c[5])}
+                for c in col_info
+            ]
+            st.dataframe(schema_rows, width="stretch", hide_index=True)
+
+        with st.expander("💻 Chạy truy vấn SQL trực tiếp (Chỉ đọc — SELECT)"):
+            default_sql = f'SELECT {col_expr} FROM "{picked_table}" LIMIT 20;'
+            custom_sql = st.text_area("Câu lệnh SQL (SELECT / PRAGMA)", value=default_sql, height=75, key="web_db_custom_sql")
+            if st.button("▶️ Chạy câu lệnh SQL", type="primary", key="web_db_run_sql_btn"):
+                cleaned_sql = (custom_sql or "").strip()
+                if not cleaned_sql.lower().startswith(("select", "pragma", "with")):
+                    st.error("Để an toàn dữ liệu, ô truy vấn nhanh chỉ cho phép câu lệnh đọc (SELECT / PRAGMA).")
+                else:
+                    try:
+                        cur = conn.execute(cleaned_sql)
+                        q_cols = [d[0] for d in (cur.description or [])]
+                        q_rows = cur.fetchall()
+                        q_data = [
+                            {k: (f"<BLOB {len(v)} bytes>" if isinstance(v, (bytes, bytearray)) else v) for k, v in zip(q_cols, r)}
+                            for r in q_rows[:500]
+                        ]
+                        st.success(f"Truy vấn thành công: trả về {len(q_rows)} dòng.")
+                        st.dataframe(q_data, width="stretch", hide_index=True)
+                    except sqlite3.Error as exc:
+                        st.error(f"Lỗi cú pháp SQL: {exc}")
+
+
 def _sidebar(
     store: ExpenseStore,
     ext_store: ExtensionsStore,
@@ -655,7 +770,7 @@ def _sidebar(
         logo_icon = mascot_logo_svg(34)
         _html_md(
             f'<div class="brand"><div class="brand-icon">{logo_icon}</div>'
-            f'<div class="brand-name">UniSpend 2.0</div>'
+            f'<div class="brand-name">THU CHI UTH</div>'
             f'<div class="muted">Mobile-First Money Calendar</div></div>'
         )
         if db_path is not None and base_data_dir is not None:
@@ -786,7 +901,7 @@ def _render_tab_lich(
     header_parts = [
         '<div class="monii-top-header mobile-only-header">',
         '<div class="monii-brand-block">',
-        f'<div class="monii-brand-logo">{pig_logo_svg}<span>UniSpend</span></div>',
+        f'<div class="monii-brand-logo">{pig_logo_svg}<span>THU CHI UTH</span></div>',
         '<div class="monii-brand-sub">Money Calendar</div>',
         '</div>',
         '<div class="monii-header-controls">',
@@ -1986,7 +2101,7 @@ def _charts(
             st.download_button(
                 "📗 Xuất Excel",
                 data=excel_bytes,
-                file_name=f"UniSpend_BaoCao_{month}.xlsx",
+                file_name=f"THU_CHI_UTH_BaoCao_{month}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 type="primary",
                 width="stretch",
@@ -2003,7 +2118,7 @@ def _charts(
             st.download_button(
                 "📄 Xuất PDF",
                 data=pdf_bytes,
-                file_name=f"UniSpend_BaoCao_{month}.pdf",
+                file_name=f"THU_CHI_UTH_BaoCao_{month}.pdf",
                 mime="application/pdf",
                 width="stretch",
             )
@@ -2736,6 +2851,9 @@ def _render_tab_canhan(
     # 0b. AI Làm sạch & Chuẩn hóa dữ liệu thô (CSV/Excel/Văn bản)
     _render_ai_data_cleaner_studio(resolved_base, store, ext_store)
 
+    # 0c. Xem trực tiếp bảng SQLite (.db) trên Web
+    _render_sqlite_database_viewer(db_path, store, ext_store)
+
     # 1. Tìm kiếm nhanh giao dịch
     with st.container(border=True):
         _html_md(f'<div class="section-heading" style="margin-top:0;">{lucide_svg("search", 17, "#34D399")}<span>Tìm kiếm giao dịch</span></div>')
@@ -2834,7 +2952,7 @@ def _render_tab_canhan(
             st.download_button(
                 "📗 Tải Báo Cáo Excel (.xlsx)",
                 data=excel_bytes_free,
-                file_name=f"UniSpend_BaoCao_{month}.xlsx",
+                file_name=f"THU_CHI_UTH_BaoCao_{month}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 type="primary",
                 width="stretch",
@@ -2845,7 +2963,7 @@ def _render_tab_canhan(
             st.download_button(
                 "📄 Tải Báo Cáo PDF",
                 data=pdf_bytes_free,
-                file_name=f"UniSpend_BaoCao_{month}.pdf",
+                file_name=f"THU_CHI_UTH_BaoCao_{month}.pdf",
                 mime="application/pdf",
                 width="stretch",
                 key=f"canhan_free_pdf_{month}",
@@ -2881,7 +2999,7 @@ def _render_tab_canhan(
             st.download_button(
                 "📥 Tải bản sao lưu SQLite (.db)",
                 data=backup_bytes,
-                file_name=f"unispend_backup_{date.today().isoformat()}.db",
+                file_name=f"THU_CHI_UTH_Backup_{date.today().isoformat()}.db",
                 mime="application/octet-stream",
                 width="stretch",
             )
@@ -3169,6 +3287,7 @@ def _render_desktop_sidebar(
         ("gallery", "?tab=hoadon&bmode=gallery", "image", "Kho ảnh hóa đơn"),
         ("thongke", "?tab=thongke", "pie-chart", "Thống kê chi tiêu"),
         ("cleaner", "?tab=cleaner", "sparkles", "AI Làm sạch dữ liệu"),
+        ("dbview", "?tab=dbview", "file-spreadsheet", "Xem Database (.db)"),
         ("ocr", "?tab=ocr", "scan-line", "Quét hóa đơn AI"),
         ("voice", "?tab=voice", "mic", "Nhập giọng nói"),
         ("canhan", "?tab=canhan", "settings", "Cá nhân & Tài khoản"),
@@ -3204,7 +3323,7 @@ def _render_desktop_sidebar(
             <div class="uds-brand">
                 <div class="uds-brand-icon" style="background:transparent;box-shadow:none;width:44px;height:44px;">{mascot_logo_svg(44)}</div>
                 <div>
-                    <div class="uds-brand-title">UniSpend 2.0</div>
+                    <div class="uds-brand-title">THU CHI UTH</div>
                     <div class="uds-brand-sub">Quản lý tài chính thông minh</div>
                 </div>
             </div>
@@ -3236,6 +3355,7 @@ def _render_desktop_topbar(active_tab: str, month: str, dark_mode: bool, account
         "hoadon": ("Hóa đơn & Sổ ghi nợ", "Theo dõi khoản định kỳ, công nợ và trạng thái thanh toán."),
         "thongke": ("Thống kê chi tiêu", "Phân tích tỷ trọng danh mục, xu hướng và cảnh báo ngân sách."),
         "cleaner": ("AI Làm sạch dữ liệu thô", "Tải file CSV/Excel hoặc dán văn bản thô để AI chuẩn hóa thành tài khoản .db riêng."),
+        "dbview": ("Trình xem Database SQLite (.db)", "Xem trực tiếp các bảng transactions, budgets, receipts, schema CHECK và chạy lệnh SQL."),
         "ocr": ("Quét hóa đơn AI", "Nhận diện hóa đơn tự động bằng Tesseract OCR 5.x & Gemini AI."),
         "voice": ("Nhập chi tiêu bằng giọng nói", "Ghi chép nhanh bằng tiếng Việt tự nhiên."),
         "canhan": ("Cá nhân & Tài khoản", "Chuyển tài khoản .db, AI làm sạch dữ liệu, trợ lý AI và sao lưu."),
@@ -3351,7 +3471,7 @@ def _render_fixed_bottom_navigation(active_tab: str) -> None:
 
 def run_app(db_path, demo: bool = False) -> None:
     st.set_page_config(
-        page_title="UniSpend 2.0 — Money Calendar",
+        page_title="THU CHI UTH — Quản lý chi tiêu sinh viên",
         page_icon="🐷",
         layout="wide",
         initial_sidebar_state="collapsed",
@@ -3397,7 +3517,7 @@ def run_app(db_path, demo: bool = False) -> None:
                 st.session_state["pending_month"] = avail[0]
 
         dark_mode = ext_store.get_theme_mode() == "dark"
-        hide_legacy = active_tab in ("lich", "hoadon", "ocr", "voice", "cleaner")
+        hide_legacy = active_tab in ("lich", "hoadon", "ocr", "voice", "cleaner", "dbview")
         inject_mobile_styles(light_mode=not dark_mode, hide_legacy_tabs=hide_legacy)
 
         month = _sidebar(
@@ -3442,6 +3562,9 @@ def run_app(db_path, demo: bool = False) -> None:
             f'👤 Tài khoản: <span style="color:#34D399;">{escape(active_account_label)}</span>'
             f' <span style="font-weight:500;color:var(--text-muted);">({ _acc_tx_cnt } giao dịch · Tháng {escape(month)})</span></div>'
             '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+            '<a href="?tab=dbview" target="_self" style="text-decoration:none;font-size:0.8rem;font-weight:700;'
+            'padding:5px 11px;border-radius:999px;background:rgba(59,130,246,0.18);'
+            'border:1px solid rgba(96,165,250,0.45);color:var(--text-main);">🗄️ Xem bảng .db</a>'
             '<a href="?tab=canhan" target="_self" style="text-decoration:none;font-size:0.8rem;font-weight:700;'
             'padding:5px 11px;border-radius:999px;background:rgba(255,255,255,0.08);'
             'border:1px solid rgba(148,163,184,0.35);color:var(--text-main);">🔄 Đổi / Tạo tài khoản</a>'
@@ -3460,6 +3583,8 @@ def run_app(db_path, demo: bool = False) -> None:
             _render_tab_thongke(store, ext_store, month, summary, statuses, budgets, dark_mode)
         elif active_tab == "cleaner":
             _render_ai_data_cleaner_studio(base_data_dir, store, ext_store)
+        elif active_tab == "dbview":
+            _render_sqlite_database_viewer(active_db_path, store, ext_store)
         elif active_tab == "canhan":
             _render_tab_canhan(active_db_path, store, ext_store, month, base_data_dir=base_data_dir)
         elif active_tab == "ocr":

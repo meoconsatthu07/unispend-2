@@ -26,12 +26,12 @@ class AccountInfo:
 
 
 FRIENDLY_NAMES: dict[str, str] = {
-    "expenses.db": "Tài khoản cá nhân mặc định",
-    "demo.db": "Tài khoản Demo",
-    "unispend2_clean.db": "Sinh viên UTH (Dữ liệu sạch 6 tháng)",
-    "real_unispend2_clean.db": "Dữ liệu thật Kaggle (2.298 giao dịch)",
-    "tai_khoan_uth_sach.db": "Sinh viên UTH (Dữ liệu sạch 6 tháng)",
-    "tai_khoan_du_lieu_that.db": "Dữ liệu thật Kaggle (2.298 giao dịch)",
+    "expenses.db": "THU CHI UTH — Tài khoản cá nhân",
+    "demo.db": "THU CHI UTH — Tài khoản Demo",
+    "THU_CHI_UTH_Tai_Khoan_Sach_v2.db": "THU CHI UTH — Sinh viên 6 tháng (Sạch)",
+    "THU_CHI_UTH_Tai_Khoan_Kaggle_v2.db": "THU CHI UTH — Dữ liệu thật Kaggle (2.298 GD)",
+    "unispend2_clean.db": "THU CHI UTH — Sinh viên 6 tháng (Sạch)",
+    "real_unispend2_clean.db": "THU CHI UTH — Dữ liệu thật Kaggle (2.298 GD)",
 }
 
 
@@ -50,6 +50,7 @@ def _is_extension_or_backup(path: Path) -> bool:
         not name.endswith(".db")
         or "extension" in name
         or name.endswith(".bak")
+        or name.endswith("_3d.db")
         or name.startswith("unispend3d")
         or name.startswith("real_unispend3d")
         or name == "student_expense.db"
