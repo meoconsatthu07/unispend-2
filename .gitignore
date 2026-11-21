@@ -6,3 +6,17 @@ data/*.db-*
 .tools/
 tmp/
 .venv/
+
+# Secrets & Environment
+.env
+.env.*
+!.env.example
+*secret*.json
+*credentials*.json
+
+# Temporary receipt images, OCR cache & personal database backups
+data/*.bak
+data/*.tmp
+data/ocr_cache/
+data/temp_receipts/
+*.pre_restore.bak

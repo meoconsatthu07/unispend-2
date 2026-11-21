@@ -1,1 +1,9 @@
 -r unispend_3d/requirements.txt
+openpyxl>=3.1,<4
+fpdf2>=2.8,<3
+python-dotenv>=1.0,<2
+google-genai>=1.0,<4
+pytesseract>=0.3.10,<1
+opencv-python-headless>=4.8,<6
+Pillow>=10.0,<14
+pydantic>=2.7,<3
