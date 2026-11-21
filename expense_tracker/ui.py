@@ -1364,9 +1364,8 @@ def _render_receipt_vault_gallery(
                             total_amount=int(v_amount),
                             payment_method="Không rõ",
                             suggested_category=v_cat,
-                            image_hash=img_hash,
+                            image_bytes=img_bytes,
                             image_mime=img_mime,
-                            image_blob=img_bytes,
                             raw_text=v_note.strip(),
                         )
                         _notice(f"Đã lưu ảnh hóa đơn '{clean_store}' vào Kho ảnh thành công!")
@@ -1378,22 +1377,30 @@ def _render_receipt_vault_gallery(
             '</div>'
         )
 
-    # 3. Bộ lọc & Tìm kiếm trong Kho ảnh hóa đơn
-    f_c1, f_c2 = st.columns([1.1, 1.9])
+    # 3. Bộ lọc 3 cột gọn gàng: Phạm vi | Danh mục | Tìm kiếm
+    f_c1, f_c2, f_c3 = st.columns([1.0, 1.0, 1.6])
     with f_c1:
         scope_opt = st.selectbox(
-            "Phạm vi hiển thị",
+            "Phạm vi",
             [f"Tất cả ({len(all_receipts)})", f"Tháng {month}"],
             key="vault_scope_filter",
         )
     with f_c2:
+        cat_filter = st.selectbox(
+            "Danh mục",
+            ["Tất cả", *EXPENSE_CATEGORIES],
+            key="vault_cat_filter",
+        )
+    with f_c3:
         q_search = st.text_input(
-            "Tìm trong kho hóa đơn",
-            placeholder="Tìm tên cửa hàng, danh mục, nội dung hóa đơn…",
+            "Tìm nhanh hóa đơn",
+            placeholder="Tên quán, món hàng, ngày…",
             key="vault_search_query",
         ).strip().casefold()
 
     shown = all_receipts if scope_opt.startswith("Tất cả") else ext_store.list_receipts(month=month)
+    if cat_filter != "Tất cả":
+        shown = [r for r in shown if r.suggested_category == cat_filter]
     if q_search:
         shown = [
             r for r in shown
@@ -1403,14 +1410,29 @@ def _render_receipt_vault_gallery(
             or q_search in (r.purchase_date or "").casefold()
         ]
 
-    _html_md(
-        "".join([
-            '<div class="cal-section-bar">',
-            f'<div class="cal-section-title">{lucide_svg("image", 15, "#34D399")}<span>KHO ẢNH HÓA ĐƠN</span></div>',
-            f'<div class="cal-photo-pill">{len(shown)} hóa đơn</div>',
-            '</div>',
-        ])
-    )
+    # Phân trang 10 hóa đơn/trang cho mượt & gọn mắt
+    page_size = 10
+    total_pages = max(1, (len(shown) + page_size - 1) // page_size)
+    p_c1, p_c2 = st.columns([2.2, 1.0])
+    with p_c1:
+        _html_md(
+            "".join([
+                '<div class="cal-section-bar" style="margin:6px 0;">',
+                f'<div class="cal-section-title">{lucide_svg("image", 15, "#34D399")}<span>KHO ẢNH HÓA ĐƠN</span></div>',
+                f'<div class="cal-photo-pill">{len(shown)} hóa đơn · {money(sum(r.total_amount for r in shown))}</div>',
+                '</div>',
+            ])
+        )
+    with p_c2:
+        cur_page = int(
+            st.selectbox(
+                "Trang",
+                list(range(1, total_pages + 1)),
+                format_func=lambda p: f"Trang {p}/{total_pages}",
+                key="vault_page_num",
+                label_visibility="collapsed",
+            )
+        )
 
     if not shown:
         q_svg = mascot_question_svg(width=102, height=102)
@@ -1425,58 +1447,71 @@ def _render_receipt_vault_gallery(
         )
         return
 
-    # 4. Hiển thị lưới ảnh hóa đơn (Gallery Cards)
-    for rec in shown:
-        with st.container(border=True):
-            g_col_img, g_col_info = st.columns([1.05, 1.55])
-            with g_col_img:
-                if rec.image_blob:
-                    st.image(rec.image_blob, width="stretch")
-                else:
-                    _html_md(
-                        '<div style="height:120px;border-radius:14px;background:var(--bg-card-elevated);'
-                        'border:1px dashed var(--border-input);display:flex;flex-direction:column;'
-                        'align-items:center;justify-content:center;gap:6px;color:var(--text-muted);font-size:0.76rem;">'
-                        f'{lucide_svg("file-text", 26, "#34D399")}<span>Hóa đơn văn bản OCR</span></div>'
-                    )
-            with g_col_info:
-                tx_badge = f"GD #{rec.transaction_id}" if rec.transaction_id else "Chỉ lưu kho ảnh"
-                _html_md(
-                    "".join([
-                        f'<div style="font-size:1rem;font-weight:800;color:var(--text-main);margin-bottom:4px;">{escape(rec.store_name)}</div>',
-                        f'<div style="font-size:1.18rem;font-weight:900;color:#F87171;margin-bottom:6px;">{money(rec.total_amount)}</div>',
-                        f'<div style="font-size:0.78rem;color:var(--text-muted);line-height:1.55;">'
-                        f'Ngày: <strong>{display_date(rec.purchase_date)}</strong> {escape(rec.purchase_time or "")}<br>'
-                        f'Danh mục: <strong>{escape(rec.suggested_category)}</strong> · {escape(tx_badge)}<br>'
-                        f'Mã hóa đơn: <strong>#{rec.id}</strong> · Thanh toán: {escape(rec.payment_method or "Không rõ")}'
-                        f'</div>',
-                    ])
-                )
-                act_c1, act_c2 = st.columns(2)
-                with act_c1:
-                    if rec.image_blob:
-                        ext_name = "png" if "png" in (rec.image_mime or "").lower() else "jpg"
-                        st.download_button(
-                            "📥 Tải ảnh",
-                            data=rec.image_blob,
-                            file_name=f"UniSpend_HoaDon_{rec.id}_{rec.purchase_date}.{ext_name}",
-                            mime=rec.image_mime or "image/jpeg",
-                            width="stretch",
-                            key=f"vault_dl_{rec.id}",
-                        )
-                with act_c2:
-                    if st.button("🗑️ Xóa", key=f"vault_del_{rec.id}", width="stretch"):
-                        ext_store.delete_receipt(rec.id)
-                        _notice(f"Đã xóa hóa đơn #{rec.id} khỏi kho ảnh.")
+    start_i = (cur_page - 1) * page_size
+    page_items = shown[start_i : start_i + page_size]
 
-            if rec.items or rec.raw_text:
-                with st.expander(f"📄 Xem chi tiết món hàng & nội dung OCR (#{rec.id})"):
-                    if rec.items:
-                        for it in rec.items:
-                            if isinstance(it, dict):
-                                st.write(f"- **{it.get('name', 'Món hàng')}**: {money(int(it.get('price', 0) or 0))}")
-                    if rec.raw_text:
-                        st.code(rec.raw_text, language="text")
+    # 4. Hiển thị lưới 2 cột gọn gàng, sạch sẽ
+    for row_idx in range(0, len(page_items), 2):
+        row_pair = page_items[row_idx : row_idx + 2]
+        grid_cols = st.columns(2)
+        for col_idx, rec in enumerate(row_pair):
+            with grid_cols[col_idx]:
+                with st.container(border=True):
+                    tx_badge = f"GD #{rec.transaction_id}" if rec.transaction_id else "Chỉ lưu ảnh"
+                    _html_md(
+                        "".join([
+                            '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">',
+                            f'<div style="font-size:0.9rem;font-weight:800;color:var(--text-main);line-height:1.25;">{escape(rec.store_name)}</div>',
+                            f'<span class="essential-pill pill-safe" style="font-size:0.66rem;padding:2px 8px;flex-shrink:0;">{escape(rec.suggested_category)}</span>',
+                            '</div>',
+                            f'<div style="font-size:1.12rem;font-weight:900;color:#F87171;margin-bottom:6px;">-{money(rec.total_amount)}</div>',
+                        ])
+                    )
+                    thumb_c, meta_c = st.columns([1.0, 1.35])
+                    with thumb_c:
+                        if rec.image_blob:
+                            st.image(rec.image_blob, width="stretch")
+                        else:
+                            _html_md(
+                                '<div style="height:88px;border-radius:10px;background:var(--bg-card-elevated);'
+                                'border:1px dashed var(--border-input);display:flex;align-items:center;'
+                                f'justify-content:center;color:var(--text-muted);">{lucide_svg("file-text", 22, "#34D399")}</div>'
+                            )
+                    with meta_c:
+                        _html_md(
+                            f'<div style="font-size:0.75rem;color:var(--text-muted);line-height:1.55;">'
+                            f'<strong>{display_date(rec.purchase_date)}</strong> {escape(rec.purchase_time or "")}<br>'
+                            f'TT: {escape(rec.payment_method or "Không rõ")}<br>'
+                            f'Mã: #{rec.id} · {escape(tx_badge)}'
+                            f'</div>'
+                        )
+                        b1, b2 = st.columns(2)
+                        with b1:
+                            if rec.image_blob:
+                                ext_name = "png" if "png" in (rec.image_mime or "").lower() else "jpg"
+                                st.download_button(
+                                    "📥 Tải",
+                                    data=rec.image_blob,
+                                    file_name=f"UniSpend_HoaDon_{rec.id}_{rec.purchase_date}.{ext_name}",
+                                    mime=rec.image_mime or "image/jpeg",
+                                    width="stretch",
+                                    key=f"vault_dl_{rec.id}",
+                                )
+                        with b2:
+                            if st.button("🗑️ Xóa", key=f"vault_del_{rec.id}", width="stretch"):
+                                ext_store.delete_receipt(rec.id)
+                                _notice(f"Đã xóa hóa đơn #{rec.id} khỏi kho ảnh.")
+
+                    if rec.items or rec.raw_text or rec.image_blob:
+                        with st.expander(f"🔍 Xem chi tiết & ảnh lớn (#{rec.id})"):
+                            if rec.image_blob:
+                                st.image(rec.image_blob, width="stretch")
+                            if rec.items:
+                                for it in rec.items:
+                                    if isinstance(it, dict):
+                                        st.write(f"- **{it.get('name', 'Món hàng')}**: {money(int(it.get('price', 0) or 0))}")
+                            if rec.raw_text:
+                                st.code(rec.raw_text, language="text")
 
 
 def _render_tab_hoadon(
