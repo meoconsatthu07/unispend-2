@@ -509,6 +509,8 @@ def resolve_tesseract_cmd() -> str:
     if configured:
         candidates.append(configured)
     candidates.extend([
+        "/usr/bin/tesseract",
+        "/usr/local/bin/tesseract",
         r"C:\Program Files\Tesseract-OCR\tesseract.exe",
         r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
         os.path.expandvars(r"%LOCALAPPDATA%\Programs\Tesseract-OCR\tesseract.exe"),
@@ -1073,7 +1075,7 @@ def test_gemini_connection() -> tuple[bool, str]:
     """Kiểm tra kết nối thực tế tới Google Gemini API mà không lộ API Key."""
     load_env_file()
     api_key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
-    model = (os.environ.get("GEMINI_MODEL") or "gemini-2.5-flash").strip()
+    model = (os.environ.get("GEMINI_MODEL") or "gemini-3.5-flash-lite").strip()
     if not api_key:
         return False, "Chưa cấu hình GEMINI_API_KEY trong file .env."
     try:
@@ -1136,7 +1138,7 @@ def analyze_ocr_text_with_gemini(
 
     load_env_file()
     api_key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
-    model = (os.environ.get("GEMINI_MODEL") or "gemini-2.5-flash").strip()
+    model = (os.environ.get("GEMINI_MODEL") or "gemini-3.5-flash-lite").strip()
 
     if not api_key:
         return GeminiAnalysisResult(
@@ -1256,7 +1258,7 @@ def analyze_receipt_image_with_gemini(
 
     load_env_file()
     api_key = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
-    model = (os.environ.get("GEMINI_MODEL") or "gemini-2.5-flash").strip()
+    model = (os.environ.get("GEMINI_MODEL") or "gemini-3.5-flash-lite").strip()
     if not api_key:
         return GeminiAnalysisResult(
             success=False,

@@ -33,7 +33,7 @@ from .utils import display_date, money, shift_month
 
 
 def load_env_file(env_path: str | Path | None = None) -> None:
-    """Đọc biến môi trường từ file .env nếu có (ghi đè các biến đang rỗng trong os.environ)."""
+    """Đọc biến môi trường từ file .env và Streamlit Cloud Secrets nếu có."""
     candidates = []
     if env_path:
         candidates.append(Path(env_path))
@@ -51,13 +51,32 @@ def load_env_file(env_path: str | Path | None = None) -> None:
             v = v.strip().strip('"').strip("'")
             if k and v and not os.environ.get(k, "").strip():
                 os.environ[k] = v
-        return
+        break
+
+    # Tự động đồng bộ Streamlit Cloud Secrets -> os.environ khi chạy Web 24/7
+    try:
+        import streamlit as st
+        sec = st.secrets
+        secret_keys = ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_MODEL", "AI_PROVIDER", "TESSERACT_CMD", "OPENAI_API_KEY", "OPENAI_MODEL")
+        for key in secret_keys:
+            if not os.environ.get(key, "").strip():
+                if key in sec and str(sec[key]).strip():
+                    os.environ[key] = str(sec[key]).strip()
+                else:
+                    for section_name in ("secrets", "gemini", "api", "env"):
+                        if section_name in sec and isinstance(sec[section_name], dict) and key in sec[section_name]:
+                            val = str(sec[section_name][key]).strip()
+                            if val:
+                                os.environ[key] = val
+                                break
+    except Exception:
+        pass
 
 
 def save_ai_api_config(
     *,
     gemini_api_key: str | None = None,
-    gemini_model: str = "gemini-2.5-flash",
+    gemini_model: str = "gemini-3.5-flash-lite",
     openai_api_key: str | None = None,
     openai_model: str = "gpt-4o-mini",
     tesseract_cmd: str | None = None,
@@ -97,7 +116,7 @@ def save_ai_api_config(
         "# Cấu hình AI & OCR cho UniSpend 2.0 (Tệp này được loại trừ khỏi Git qua .gitignore)",
         f"AI_PROVIDER={existing.get('AI_PROVIDER', 'auto')}",
         f"GEMINI_API_KEY={existing.get('GEMINI_API_KEY', '')}",
-        f"GEMINI_MODEL={existing.get('GEMINI_MODEL', 'gemini-2.5-flash')}",
+        f"GEMINI_MODEL={existing.get('GEMINI_MODEL', 'gemini-3.5-flash-lite')}",
         f"OPENAI_API_KEY={existing.get('OPENAI_API_KEY', '')}",
         f"OPENAI_MODEL={existing.get('OPENAI_MODEL', 'gpt-4o-mini')}",
         f"TESSERACT_CMD={existing.get('TESSERACT_CMD', r'C:\\Program Files\\Tesseract-OCR\\tesseract.exe')}",
@@ -128,7 +147,7 @@ def check_api_status(preferred_provider: str | None = None) -> AIStatus:
         return f"{key[:4]}...{key[-4:]}"
 
     if provider_cfg in ("gemini", "auto") and gemini_key:
-        model = (os.environ.get("GEMINI_MODEL") or "gemini-2.5-flash").strip()
+        model = (os.environ.get("GEMINI_MODEL") or "gemini-3.5-flash-lite").strip()
         return AIStatus(
             configured=True,
             provider="gemini",
