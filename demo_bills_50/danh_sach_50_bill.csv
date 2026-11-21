@@ -1,0 +1,51 @@
+﻿STT,File ảnh,Ngày,Giờ,Cửa hàng,Danh mục,Tổng tiền (VNĐ),Thanh toán
+1,bill_01_com_tam_suon.jpg,2026-11-01,11:45,CƠM TẤM SÀI GÒN 24H,Ăn uống,46000,Tiền mặt
+2,bill_02_pho_bo_tai_nam.jpg,2026-11-01,07:20,PHỞ BÒ GIA TRUYỀN HÀ NỘI,Ăn uống,50000,Ví MoMo
+3,bill_03_highlands_coffee.jpg,2026-11-02,14:10,HIGHLANDS COFFEE - D2,Ăn uống,74000,Chuyển khoản QR
+4,bill_04_banh_mi_thit_nuong.jpg,2026-11-02,07:05,BÁNH MÌ CHẢO & THỊT NƯỚNG,Ăn uống,32000,Tiền mặt
+5,bill_05_bun_bo_hue.jpg,2026-11-03,12:05,BÚN BÒ HUẾ O XUÂN,Ăn uống,52000,Ví MoMo
+6,bill_06_circle_k_an_dem.jpg,2026-11-03,22:15,CIRCLE K - NGUYỄN GIA TRÍ,Ăn uống,49000,Chuyển khoản QR
+7,bill_07_winmart_thuc_pham.jpg,2026-11-04,17:30,WINMART+ BÌNH THẠNH,Ăn uống,106000,Ví MoMo
+8,bill_08_tra_sua_phuc_long.jpg,2026-11-04,15:20,PHÚC LONG COFFEE & TEA,Ăn uống,65000,Chuyển khoản QR
+9,bill_09_com_ga_xoi_mo.jpg,2026-11-05,11:50,CƠM GÀ XỐI MỠ SINH VIÊN,Ăn uống,50000,Tiền mặt
+10,bill_10_bach_hoa_xanh.jpg,2026-11-06,18:10,BÁCH HÓA XANH - UNG VĂN KHIÊM,Ăn uống,140000,Chuyển khoản QR
+11,bill_11_bun_dau_mam_tom.jpg,2026-11-07,19:00,BÚN ĐẬU MẮM TÔM PHỐ CỔ,Ăn uống,80000,Ví MoMo
+12,bill_12_ca_phe_muoi.jpg,2026-11-08,08:15,CÀ PHÊ MUỐI CHÚ LONG,Ăn uống,25000,Tiền mặt
+13,bill_13_mi_cay_sasin.jpg,2026-11-09,18:45,MÌ CAY SASIN - BÌNH THẠNH,Ăn uống,84000,Chuyển khoản QR
+14,bill_14_hu_tieu_nam_vang.jpg,2026-11-10,07:35,HỦ TIẾU NAM VANG THÀNH ĐẠT,Ăn uống,51000,Tiền mặt
+15,bill_15_jollibee_combo.jpg,2026-11-11,12:30,JOLLIBEE - PEARL PLAZA,Ăn uống,95000,Ví MoMo
+16,bill_16_banh_trang_tron.jpg,2026-11-12,16:40,ĂN VẶT CỔNG TRƯỜNG UTH,Ăn uống,35000,Tiền mặt
+17,bill_17_bun_thit_nuong.jpg,2026-11-14,12:15,BÚN THỊT NƯỚNG KIỀU BẢO,Ăn uống,48000,Chuyển khoản QR
+18,bill_18_chao_suon_dem.jpg,2026-11-15,21:20,CHÁO SƯỜN SỤN ĐÊM,Ăn uống,38000,Tiền mặt
+19,bill_19_lau_sinh_vien.jpg,2026-11-17,19:30,LẨU BÒ NHÚNG DẤM 539,Ăn uống,149000,Chuyển khoản QR
+20,bill_20_gs25_an_sang.jpg,2026-11-19,07:10,GS25 - VÕ OANH UTH,Ăn uống,45000,Ví MoMo
+21,bill_21_petrolimex_xang_1.jpg,2026-11-02,07:50,CỬA HÀNG XĂNG DẦU PETROLIMEX SỐ 12,Đi lại,70000,Tiền mặt
+22,bill_22_grabbike_di_hoc.jpg,2026-11-04,06:55,GRABBIKE - CHUYẾN ĐI TP.HCM,Đi lại,26000,Ví MoMo
+23,bill_23_ve_xe_buyt_thang.jpg,2026-11-05,08:05,TRUNG TÂM VẬN TẢI HÀNH KHÁCH TP.HCM,Đi lại,67500,Tiền mặt
+24,bill_24_gui_xe_uth.jpg,2026-11-06,17:15,BÃI GIỮ XE SINH VIÊN UTH,Đi lại,20000,Tiền mặt
+25,bill_25_pvoil_xang_2.jpg,2026-11-10,17:40,TRẠM XĂNG DẦU PVOIL HÀNG XANH,Đi lại,60000,Chuyển khoản QR
+26,bill_26_thay_nhot_xe_may.jpg,2026-11-13,16:20,TIỆM SỬA XE HONDA MINH PHÁT,Đi lại,130000,Tiền mặt
+27,bill_27_bebike_di_lam.jpg,2026-11-16,17:55,BEBIKE - HÓA ĐƠN ĐIỆN TỬ,Đi lại,32000,Ví MoMo
+28,bill_28_ve_xe_phuong_trang.jpg,2026-11-20,18:00,XE KHÁCH PHƯƠNG TRANG (FUTA),Đi lại,180000,Chuyển khoản QR
+29,bill_29_photo_giao_trinh.jpg,2026-11-03,08:30,TIỆM PHOTOCOPY CỔNG UTH,Học tập,60000,Tiền mặt
+30,bill_30_fahasa_sach_python.jpg,2026-11-05,16:00,NHÀ SÁCH FAHASA - TÂN ĐỊNH,Học tập,177000,Chuyển khoản QR
+31,bill_31_in_mau_do_an.jpg,2026-11-08,10:20,IN ẤN KỸ THUẬT SỐ D2,Học tập,95000,Ví MoMo
+32,bill_32_van_phong_pham.jpg,2026-11-09,09:15,VĂN PHÒNG PHẨM THIÊN LONG,Học tập,76000,Tiền mặt
+33,bill_33_luyen_thi_toeic.jpg,2026-11-11,18:30,ANH NGỮ TOEIC SINH VIÊN,Học tập,185000,Chuyển khoản QR
+34,bill_34_usb_luu_bai.jpg,2026-11-14,15:10,CELLPHONES - BÌNH THẠNH,Học tập,159000,Chuyển khoản QR
+35,bill_35_khoa_hoc_excel.jpg,2026-11-16,20:05,NỀN TẢNG HỌC TRỰC TUYẾN UNICA,Học tập,199000,Ví MoMo
+36,bill_36_photo_de_cuong.jpg,2026-11-19,13:20,PHOTOCOPY SINH VIÊN D3,Học tập,28000,Tiền mặt
+37,bill_37_tien_tro_thang_11.jpg,2026-11-01,09:00,NHÀ TRỌ SINH VIÊN AN KHANG,Tiền trọ,1680000,Chuyển khoản QR
+38,bill_38_tien_dien_nuoc.jpg,2026-11-01,09:05,PHIẾU THU ĐIỆN NƯỚC PHÒNG 304,Tiền trọ,289000,Chuyển khoản QR
+39,bill_39_internet_wifi_fpt.jpg,2026-11-05,10:00,FPT TELECOM - CƯỚC INTERNET,Tiền trọ,110000,Ví MoMo
+40,bill_40_giat_ui_tu_dong.jpg,2026-11-09,19:40,GIẶT SẤY TỰ ĐỘNG WASH & GO,Tiền trọ,50000,Tiền mặt
+41,bill_41_nuoc_uong_binh_20l.jpg,2026-11-12,14:30,ĐẠI LÝ NƯỚC UỐNG LAVIE - VĨNH HẢO,Tiền trọ,52000,Tiền mặt
+42,bill_42_coopmart_do_sinh_hoat.jpg,2026-11-15,17:05,CO.OPMART RẠCH MIỄU,Tiền trọ,162000,Chuyển khoản QR
+43,bill_43_cgv_ve_xem_phim.jpg,2026-11-07,20:15,CGV CINEMAS - PEARL PLAZA,Giải trí,110000,Ví MoMo
+44,bill_44_cyber_game.jpg,2026-11-10,21:00,CYBERCORE GAMING BÌNH THẠNH,Giải trí,62000,Tiền mặt
+45,bill_45_bida_cung_ban.jpg,2026-11-13,20:30,CLB BIDA PHỐ SINH VIÊN,Giải trí,65000,Chuyển khoản QR
+46,bill_46_cafe_boardgame.jpg,2026-11-16,15:30,BOARDGAME STATION CAFE,Giải trí,69000,Ví MoMo
+47,bill_47_san_cau_long.jpg,2026-11-18,18:00,SÂN CẦU LÔNG VĂN THÁNH,Giải trí,65000,Tiền mặt
+48,bill_48_nha_thuoc_long_chau.jpg,2026-11-06,19:15,NHÀ THUỐC FPT LONG CHÂU,Khác,92000,Chuyển khoản QR
+49,bill_49_cat_toc_30shine.jpg,2026-11-12,17:10,30SHINE HAIR SALON,Khác,90000,Ví MoMo
+50,bill_50_mua_ao_thun_sv.jpg,2026-11-18,16:25,SHOP THỜI TRANG YAME BÌNH THẠNH,Khác,191000,Chuyển khoản QR
