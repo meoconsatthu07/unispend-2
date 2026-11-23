@@ -313,8 +313,6 @@ def _activate_account(base_data_dir: Path, target_db: Path, message: str | None 
     resolved = str(target_db.resolve())
     save_active_account(base_data_dir, resolved)
     st.session_state[f"active_account_db:{base_data_dir}"] = resolved
-    st.session_state["sidebar_account_switcher"] = resolved
-    st.session_state["personal_account_switcher"] = resolved
     st.session_state["account_just_switched"] = True
     for param_key in ("day", "month"):
         try:
@@ -335,8 +333,6 @@ def _on_account_select(base_data_dir: Path, widget_key: str) -> None:
     resolved = str(Path(chosen).resolve())
     save_active_account(base_data_dir, resolved)
     st.session_state[f"active_account_db:{base_data_dir}"] = resolved
-    st.session_state["sidebar_account_switcher"] = resolved
-    st.session_state["personal_account_switcher"] = resolved
     st.session_state["account_just_switched"] = True
     for param_key in ("day", "month"):
         try:
